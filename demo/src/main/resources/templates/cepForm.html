@@ -1,0 +1,138 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>CEP Finder</title>
+<meta charset="utf-8" />
+<style>
+body {
+	box-sizing: border-box;
+	margin: 0;
+}
+
+header {
+	width: 100vw;
+	padding: 15px 0;
+	text-align: center;
+	font-size: 2em;
+	background-color: #76c893;
+}
+
+main {
+	padding: 10px;
+}
+
+table, th, td {
+	border: 1px solid black;
+  	border-collapse: collapse;
+}
+
+th, td {
+  padding: 5px;
+}
+
+footer {
+	border-top: 1px solid black;
+	width: 100vw;
+	text-align: center;
+	padding: 20px 0;
+	position: fixed;
+	bottom: 0px;
+}
+
+/* Chrome */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+   -webkit-appearance: none;
+   margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+   -moz-appearance: textfield;
+}
+</style>
+</head>
+
+<body>
+	<header>CEP Finder</header>
+
+	<main>
+		<h1>Encontre todas as informações a partir do CEP</h1>
+		<form class="form">
+			<input class="cep" type="number" name="cep"
+				placeholder="Digite um CEP" maxlength="8" /> <input type="submit"
+				value="Buscar" />
+		</form>
+
+		<section class="resultado"></section>
+	</main>
+
+
+	<footer>&copy; 2022 Todos os direitos reservados.</footer>
+
+	<script>
+  document.querySelector(".form").addEventListener("submit", handleFormSubmit);
+  
+	function handleFormSubmit(ev) {
+		ev.preventDefault();
+		let cep = document.querySelector(".cep").value;
+		let result = document.querySelector(".resultado");
+        result.innerHTML = "<p>Carregando...</p>";
+        let dados;
+
+        if(cep.length > 8) {
+			result.innerHTML = "<p>Tamanho máximo: 8 números</p>";
+			return;
+        }
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if(this.readyState == 4 && this.status == 200){
+				dados = JSON.parse(this.responseText)
+				console.log(dados);
+				criarTabela(dados, result);
+            }
+            if(this.readyState == 4 && this.status == 400) {
+				result.innerHTML = "<p>CEP não encontrado.</p>";
+            }
+        }
+
+        xhttp.open("GET", "http://localhost:8080/cep-json/" + cep);
+        xhttp.send();
+	}
+
+	function criarTabela(dados, result) {
+        let table = document.createElement("TABLE")
+        let thead = `<thead>
+            <tr>
+                <th>CEP</th>
+                <th>Logradouro</th>
+                <th>Complemento</th>
+                <th>Bairro</th>
+                <th>Localidade</th>
+                <th>UF</th>
+                <th>IBGE</th>
+                <th>GIA</th>
+                <th>DDD</th>
+                <th>Siafia</th>
+            </tr>
+        `
+
+        let tbody = ""
+        tbody += "<tr>";
+       for(const campo in dados) {
+			tbody += `
+				<td>${dados[campo]}</td>
+				`
+       }
+       tbody += "</tr>";
+       
+        table.innerHTML = thead + tbody;
+        result.innerHTML = ""
+        result.appendChild(table)
+    }
+  </script>
+</body>
+</html>
